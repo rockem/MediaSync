@@ -1,5 +1,5 @@
 import os
-from types import NoneType
+
 from mutagen.easyid3 import EasyID3
 from mutagen.m4a import M4A
 
@@ -50,27 +50,22 @@ class M4AAudioInfo:
         return ""
 
 
-class AudioFileInfo(object):
+class MutagenFileInfoCreator(object):
 
     mime_to_mutagen_info = {"mp3": MP3AudioInfo, "m4a": M4AAudioInfo}
 
-    def __init__(self, file_path):
+    def create(self, file_path):
+        mutagen_info = self.get_mutagen_info_class_for(file_path)
+        if mutagen_info is None:
+            raise UnsupportedFileError
+        return mutagen_info(file_path)
+
+    def get_mutagen_info_class_for(self, file_path):
         mutagen_info = None
         ext = self.get_ext_for(file_path)
         if ext in self.mime_to_mutagen_info:
             mutagen_info = self.mime_to_mutagen_info[ext]
-        if mutagen_info is None:
-            raise UnsupportedFileError
-
-        self.audio_info = mutagen_info(file_path)
+        return mutagen_info
 
     def get_ext_for(self, file_path):
         return os.path.splitext(file_path)[1].replace(".", "")
-
-    def get_value_for(self, tag_name):
-        return self.audio_info.get_value_for(tag_name)
-
-    def get_info(self):
-        return self.audio_info.get_info()
-
-

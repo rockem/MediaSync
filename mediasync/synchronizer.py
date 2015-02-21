@@ -4,9 +4,10 @@ from file import OSFileOperator
 from audio_file_info import MutagenFileInfoCreator
 
 
-class MediaSynchronizer(object):
+class Synchronizer(object):
     file_operator = OSFileOperator()
     file_info_creator = MutagenFileInfoCreator()
+    filters = []
 
     def __init__(self, source_path, target_path):
         self.source_path = source_path
@@ -30,10 +31,21 @@ class MediaSynchronizer(object):
     def file_path_in_target(self, song_file):
         return os.path.join(self.target_path, song_file)
 
+
     def copy_files_to_target(self):
         for f in self.file_operator.get_all_files_under(self.source_path):
-            if self.target_file_has_same_size(f) or self.target_file_has_same_hash(f):
-                self.copy_file_from_source_to_target(f)
+            if not self.should_filter(f):
+                self.copy_if_needed(f)
+
+    def should_filter(self, f):
+        for filter in self.filters:
+            if filter.should_filter(self.file_info_creator.create(self.file_path_in_source(f))):
+                return True
+        return False
+
+    def copy_if_needed(self, f):
+        if self.target_file_has_same_size(f) or self.target_file_has_same_hash(f):
+            self.copy_file_from_source_to_target(f)
 
     def target_file_has_same_size(self, f):
         return self.file_operator.getsize(self.file_path_in_source(f)) != self.file_operator.getsize(

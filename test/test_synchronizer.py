@@ -1,8 +1,8 @@
 import os
 
-from mockito import mock, when, verify, any, times
+from mockito import mock, when, verify, any, times, never
 
-from mediasync.mediasynchronizer import MediaSynchronizer
+from mediasync.synchronizer import Synchronizer
 
 
 class FileInfoCreatorStub(object):
@@ -14,7 +14,7 @@ class FileInfoCreatorStub(object):
         return self.file_to_info[file_path]
 
 
-class TestMediaSynchronizer:
+class TestSynchronizer:
     SONG_FILE = "song.mp3"
     SOURCE_PATH = "source"
     TARGET_PATH = "target"
@@ -23,7 +23,7 @@ class TestMediaSynchronizer:
 
     def setup(self):
         self.create_file_operator_mock()
-        self.ms = MediaSynchronizer(self.SOURCE_PATH, self.TARGET_PATH)
+        self.ms = Synchronizer(self.SOURCE_PATH, self.TARGET_PATH)
         self.ms.file_operator = self.file_operator_mock
         self.ms.file_info_creator = self.create_file_info_creator()
 
@@ -90,6 +90,16 @@ class TestMediaSynchronizer:
         self.ms.sync()
         self.verify_copy_file(os.path.join(self.SOURCE_PATH, sub_folder),
                               os.path.join(self.TARGET_PATH, sub_folder))
+
+    def test_skip_song_if_any_filter_should_filter(self):
+        self.create_file_in(self.SOURCE_PATH)
+        f = mock()
+        when(f).should_filter(any()).thenReturn(True)
+        self.ms.filters = [f]
+        self.ms.sync()
+        verify(self.file_operator_mock, never).copyfile(any(), any())
+
+
 
 
 

@@ -13,7 +13,7 @@ def step_impl(context):
 
 @step('I execute with parameters \"(.*)\"')
 def step_impl(context, params):
-    call(["python", "../mediasync/main.py"] + params.split(" "))
+    call(["python", "mediasync/app.py"] + params.split(" "))
 
 
 def is_source_and_target_are_equals(context):
@@ -30,3 +30,11 @@ def is_source_and_target_are_equals(context):
 @then("Target and source folders should be identical")
 def step_impl(context):
     assert is_source_and_target_are_equals(context)
+
+
+@step("I execute")
+def step_impl(context):
+    """
+    :type context behave.runner.Context
+    """
+    pass
